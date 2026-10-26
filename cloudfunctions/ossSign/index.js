@@ -46,15 +46,15 @@ cfg = {
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 
-// 只允许往这两个目录上传，防止前端传任意 key
-const ALLOWED_DIRS = ['avatars', 'moments']
+// 只允许往这几个目录上传，防止前端传任意 key
+const ALLOWED_DIRS = ['avatars', 'moments', 'homework']
 // 版本号：每次改完重新部署后可以在这里对一下，避免"改了没生效"
-const VERSION = '1.2.0'
+const VERSION = '1.3.0'
 const ACTIONS = ['policy', 'check', 'migrate', 'selftest']
 // 签名有效期（秒）：前端拿到后 15 分钟内必须传完
 const POLICY_TTL = 900
-// 单文件大小上限 10MB
-const MAX_SIZE = 10 * 1024 * 1024
+// 单文件大小上限 20MB（作业里有 PPT/PDF，10MB 不够用）
+const MAX_SIZE = 20 * 1024 * 1024
 
 const MIME = {
   jpg: 'image/jpeg',

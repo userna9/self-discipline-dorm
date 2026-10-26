@@ -81,6 +81,15 @@
       </view>
       <view class="chev"></view>
     </view>
+
+    <view class="entry" bindtap="goToHomework" hover-class="entry-hover">
+      <view class="entry-icon entry-emoji">📚</view>
+      <view class="entry-body">
+        <view class="entry-title">作业共享</view>
+        <view class="entry-desc">作业放这儿，谁都能拿</view>
+      </view>
+      <view class="chev"></view>
+    </view>
   </view>
 
   <!-- 今晚速览 -->

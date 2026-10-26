@@ -332,3 +332,12 @@
 }
 
 .courtyard-entry{display:flex;justify-content:space-between;align-items:center;gap:20rpx;padding:30rpx;margin-top:30rpx;background:#d2e3ce;border-radius:24rpx;color:#163b2e}.courtyard-kicker{font-size:21rpx;letter-spacing:3rpx;color:#5c7965}.courtyard-heading{font-family:var(--serif);font-size:35rpx;margin:8rpx 0}.courtyard-caption{font-size:22rpx;color:#5c7965}.courtyard-enter{font-size:25rpx;flex-shrink:0;border-bottom:1rpx solid #7fa88b;padding:12rpx 0}
+
+/* 作业共享入口用 emoji 当图标，和图片图标对齐 */
+.entry-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  line-height: 1;
+}

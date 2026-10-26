@@ -168,7 +168,8 @@ https://my-first-bucket-996.oss-cn-wuhan-lr.aliyuncs.com
 > - 「本地地域」的 ID 带 `-lr` 后缀（local region），不是 `cn-wuhan`，写错会报 `AccessDenied` 或域名解析失败。
 > - 查完整列表：[OSS 地域和 Endpoint](https://help.aliyun.com/zh/oss/user-guide/regions-and-endpoints)
 > - OSS 默认域名是阿里云已备案的，可以直接填，**不需要自己买域名做备案**。
-> - 图片显示用的是 `<image src>` 组件，**不受域名白名单限制**，所以 `downloadFile` / `request` 域名都不用配。
+> - 图片显示用的是 `<image src>` 组件，**不受域名白名单限制**，所以只显示图片的话 `downloadFile` / `request` 域名都不用配。
+> - ⚠️ **但「作业共享」要下载 doc/pdf/ppt 再用 `wx.openDocument` 打开，用的是 `wx.downloadFile`，必须在「downloadFile 合法域名」里加上同一个 OSS 域名**，否则真机报 `downloadFile:fail url not in domain list`。开发工具勾了「不校验合法域名」会掩盖这个问题，真机才暴露。
 > - 本地调试时可以在开发者工具「详情 → 本地设置」勾选 **不校验合法域名**，但真机预览必须配好。
 > - 阿里云对**默认域名**有「浏览器直接打开会变成下载」的策略，这不影响小程序里的 `<image>` 显示和 `previewImage` 预览。
 

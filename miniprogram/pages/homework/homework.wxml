@@ -1,0 +1,78 @@
+<view class="page-homework">
+  <view class="hw-head">
+    <view class="hw-title serif">作业共享</view>
+    <view class="hw-sub">把作业放这儿，谁都能拿</view>
+  </view>
+
+  <view class="hw-add" bindtap="openUpload" hover-class="hw-add-hover">
+    <text class="hw-add-plus">＋</text>
+    <text>分享作业</text>
+  </view>
+
+  <view class="hw-list">
+    <view class="hw-item" wx:for="{{list}}" wx:key="_id"
+          data-index="{{index}}" bindtap="onOpenFile" hover-class="hw-item-hover">
+      <view class="hw-kind" style="background: {{item.kindColor}}">{{item.kindLabel}}</view>
+      <view class="hw-body">
+        <view class="hw-name">{{item.title}}</view>
+        <view class="hw-meta">{{item.fileName}} · {{item.sizeText}}</view>
+        <view class="hw-meta hw-meta-weak">{{item.nickname}} · {{item.timeText}}</view>
+      </view>
+      <view class="hw-arrow">›</view>
+    </view>
+
+    <view class="hw-empty" wx:if="{{!loading && list.length === 0}}">
+      <view class="hw-empty-icon">📚</view>
+      <view class="hw-empty-text" wx:if="{{needInit}}">数据库还没建 homeworks 集合</view>
+      <view class="hw-empty-text" wx:else>还没有人分享作业</view>
+    </view>
+
+    <view class="hw-loading" wx:if="{{loading}}">加载中…</view>
+  </view>
+
+  <view class="hw-foot" wx:if="{{list.length > 0}}">下拉可刷新 · 点击文件直接打开</view>
+</view>
+
+<!-- 上传弹窗 -->
+<view class="modal-mask {{keyboardUp ? 'keyboard-up' : ''}}" wx:if="{{showUpload}}" bindtap="closeUpload">
+  <view class="modal-card" catchtap="noop">
+    <view class="modal-title">分享作业</view>
+
+    <view class="hw-field">
+      <view class="hw-label">作业名字</view>
+      <input
+        class="hw-input"
+        placeholder="例如：高数第三章习题"
+        value="{{titleInitial}}"
+        maxlength="30"
+        adjust-position="{{false}}"
+        bindinput="onTitleInput"
+        bindfocus="onFocus"
+        bindblur="onBlur"
+      />
+    </view>
+
+    <view class="hw-field">
+      <view class="hw-label">作业文件</view>
+      <view class="hw-pick-row">
+        <view class="hw-pick" bindtap="onPickImage" hover-class="hw-pick-hover">选图片</view>
+        <view class="hw-pick" bindtap="onPickFile" hover-class="hw-pick-hover">选文件</view>
+      </view>
+
+      <view class="hw-picked" wx:if="{{picked}}">
+        <text class="hw-picked-name">{{picked.name}}</text>
+        <text class="hw-picked-size">{{picked.sizeText}}</text>
+      </view>
+
+      <view class="hw-tip">支持图片、Word、PDF、PPT、Excel、Markdown 等，单文件 ≤ 20MB</view>
+      <view class="hw-tip hw-tip-weak">选文件是从微信聊天记录里挑，先把文件发到「文件传输助手」最方便</view>
+    </view>
+
+    <view class="hw-btns">
+      <button class="btn-primary" bindtap="onSubmit" disabled="{{uploading}}">
+        {{uploading ? '上传中…' : '发布'}}
+      </button>
+      <button class="btn-secondary" bindtap="closeUpload">取消</button>
+    </view>
+  </view>
+</view>

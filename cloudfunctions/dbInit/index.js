@@ -6,7 +6,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 exports.main = async (event, context) => {
   const db = cloud.database()
-  const collections = ['users', 'checkins', 'lottery', 'moments', 'comments', 'mealAsks']
+  const collections = ['users', 'checkins', 'lottery', 'moments', 'comments', 'mealAsks', 'homeworks', 'courtyard']
   const results = []
 
   for (const name of collections) {

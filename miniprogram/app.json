@@ -5,7 +5,8 @@
     "pages/lottery/lottery",
     "pages/moments/moments",
     "pages/profile/profile",
-    "pages/courtyard/courtyard"
+    "pages/courtyard/courtyard",
+    "pages/homework/homework"
   ],
   "window": {
     "backgroundTextStyle": "light",

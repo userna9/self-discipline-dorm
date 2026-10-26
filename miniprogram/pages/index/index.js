@@ -536,6 +536,15 @@ Page({
     wx.switchTab({ url: '/pages/moments/moments' })
   },
 
+  // 作业共享是普通页面（不在 tabBar 里），用 navigateTo
+  goToHomework() {
+    if (!this.data.userInfo) {
+      this.openProfileModal()
+      return
+    }
+    wx.navigateTo({ url: '/pages/homework/homework' })
+  },
+
   goToProfile() {
     wx.switchTab({ url: '/pages/profile/profile' })
   },

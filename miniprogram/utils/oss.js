@@ -14,13 +14,33 @@ const MIME = {
   png: 'image/png',
   gif: 'image/gif',
   webp: 'image/webp',
+  // 作业共享支持的文件类型
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  md: 'text/markdown',
+  txt: 'text/plain',
+  csv: 'text/csv',
+  zip: 'application/zip',
+  rar: 'application/vnd.rar',
+  '7z': 'application/x-7z-compressed',
 }
 
-/** 取出文件扩展名（默认 jpg） */
+/** 取出文件扩展名（默认 jpg，仅用于图片上传） */
 function extOf(filePath) {
   const m = /\.([a-z0-9]+)$/i.exec(filePath || '')
   const ext = m ? m[1].toLowerCase() : 'jpg'
   return MIME[ext] ? ext : 'jpg'
+}
+
+/** 取出原始扩展名，未知返回空串（用于文档上传，不能把 pdf 改成 jpg） */
+function extOfName(name) {
+  const m = /\.([a-z0-9]+)$/i.exec(name || '')
+  return m ? m[1].toLowerCase() : ''
 }
 
 /** 向云函数要上传签名（带本地缓存，避免每次上传都调用云函数） */
@@ -100,10 +120,52 @@ async function shrinkImage(filePath, maxSide, quality) {
   return compress(filePath, width, quality)
 }
 
+/** 把 OSS 返回的 XML 错误翻成人话 */
+function describeOssError(res) {
+  const raw = typeof res.data === 'string' ? res.data : ''
+  const code = (/<Code>([^<]+)<\/Code>/.exec(raw) || [])[1] || ''
+  const msg = (/<Message>([^<]+)<\/Message>/.exec(raw) || [])[1] || raw.slice(0, 160)
+  let hint = ''
+  if (code === 'EntityTooLarge' || code === 'InvalidPolicyDocument') {
+    hint = '（文件过大，单文件上限 20MB）'
+  } else if (code === 'SignatureDoesNotMatch') {
+    hint = '（AccessKeySecret 可能填错）'
+  } else if (code === 'AccessDenied') {
+    hint = '（没有上传权限，检查 RAM 授权）'
+  }
+  return `上传失败 ${res.statusCode}${code ? ' ' + code : ''}${hint || '：' + msg}`
+}
+
+/** 直传 OSS，返回 https 永久地址 */
+async function putToOss(params, key, localPath, contentType) {
+  const res = await new Promise((resolve, reject) => {
+    wx.uploadFile({
+      url: params.host,
+      filePath: localPath,
+      name: 'file',
+      formData: {
+        key,
+        policy: params.policy,
+        OSSAccessKeyId: params.accessId,
+        signature: params.signature,
+        success_action_status: '200',
+        'Content-Type': contentType,
+      },
+      success: resolve,
+      fail: reject,
+    })
+  })
+
+  if (res.statusCode !== 200 && res.statusCode !== 204) {
+    throw new Error(describeOssError(res))
+  }
+  return `${params.host}/${key}`
+}
+
 /**
  * 上传一个本地文件到 OSS
  * @param {string} filePath 本地临时路径（wx.chooseMedia / chooseAvatar 返回的）
- * @param {string} dir 'avatars' | 'moments'
+ * @param {string} dir 'avatars' | 'moments' | 'homework'
  * @param {string} openid 用于给文件名加前缀
  * @param {object} [options] { maxSide }
  * @returns {Promise<string>} https 永久地址
@@ -121,40 +183,24 @@ async function uploadImage(filePath, dir, openid, options) {
   const rand = Math.random().toString(36).slice(2, 8)
   const key = `${dir}/${openid || 'anon'}-${Date.now()}-${rand}.${ext}`
 
-  const res = await new Promise((resolve, reject) => {
-    wx.uploadFile({
-      url: params.host,
-      filePath: localPath,
-      name: 'file',
-      formData: {
-        key,
-        policy: params.policy,
-        OSSAccessKeyId: params.accessId,
-        signature: params.signature,
-        success_action_status: '200',
-        'Content-Type': MIME[ext],
-      },
-      success: resolve,
-      fail: reject,
-    })
-  })
+  return putToOss(params, key, localPath, MIME[ext])
+}
 
-  if (res.statusCode !== 200 && res.statusCode !== 204) {
-    const raw = typeof res.data === 'string' ? res.data : ''
-    const code = (/<Code>([^<]+)<\/Code>/.exec(raw) || [])[1] || ''
-    const msg = (/<Message>([^<]+)<\/Message>/.exec(raw) || [])[1] || raw.slice(0, 160)
-    let hint = ''
-    if (code === 'EntityTooLarge' || code === 'InvalidPolicyDocument') {
-      hint = '（图片过大）'
-    } else if (code === 'SignatureDoesNotMatch') {
-      hint = '（AccessKeySecret 可能填错）'
-    } else if (code === 'AccessDenied') {
-      hint = '（没有上传权限，检查 RAM 授权）'
-    }
-    throw new Error(`上传失败 ${res.statusCode}${code ? ' ' + code : ''}${hint || '：' + msg}`)
-  }
+/**
+ * 上传任意文件（作业共享用）：不压缩、保留原始扩展名和 MIME
+ * @param {string} filePath 本地临时路径
+ * @param {string} dir 'homework'
+ * @param {string} openid
+ * @param {string} fileName 原始文件名，用来取扩展名
+ * @returns {Promise<string>} https 永久地址
+ */
+async function uploadFile(filePath, dir, openid, fileName) {
+  const params = await getUploadParams(dir)
+  const ext = extOfName(fileName || filePath) || 'bin'
+  const rand = Math.random().toString(36).slice(2, 8)
+  const key = `${dir}/${openid || 'anon'}-${Date.now()}-${rand}.${ext}`
 
-  return `${params.host}/${key}`
+  return putToOss(params, key, filePath, MIME[ext] || 'application/octet-stream')
 }
 
 // 我们自己的 OSS 地址：https://<bucket>.<region>.aliyuncs.com/xxx
@@ -217,6 +263,7 @@ async function checkUrls(urls) {
 
 module.exports = {
   uploadImage,
+  uploadFile,
   getUploadParams,
   toDisplayUrl,
   isLocalTempFile,
