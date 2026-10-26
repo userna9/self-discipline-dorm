@@ -24,7 +24,7 @@ git config --list
 ## 1. 拿到项目
 
 ```bash
-git clone https://github.com/userna9/luguan-dorm.git
+git clone https://github.com/userna9/self-discipline-dorm.git
 cd luguan-dorm
 ```
 
